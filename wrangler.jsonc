@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/wrangler/config-schema.json",
-    "name": "weatherkit",
+    "name": "weatherkit-proxy",
     "compatibility_date": "2026-07-18",
     "compatibility_flags": ["nodejs_compat"],
     "pages_build_output_dir": "./pages"
