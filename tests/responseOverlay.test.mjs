@@ -68,7 +68,7 @@ test("Response removes forecastNextHour and preserves untouched products when pr
     assert.ok(all.currentWeather); // 槽 1 保留
 });
 
-test("Response keeps Apple forecastNextHour when provider says CLEAR but original minutes contain precipitation", async () => {
+test("Response removes Apple forecastNextHour when provider says CLEAR even if original data contains precipitation", async () => {
     const originalBytes = createOriginalRainNextHour();
     const preFetched = {
         forecastNextHour: Promise.resolve({
@@ -82,8 +82,7 @@ test("Response keeps Apple forecastNextHour when provider says CLEAR but origina
     const res = await Response({ url: "https://weatherkit.apple.com/api/v2/weather/zh-Hans-CN/22.5/114.0?country=CN&dataSets=forecastNextHour" }, { bodyBytes: originalBytes, headers: { "Content-Type": "application/vnd.apple.flatbuffer" }, status: 200 }, { preFetched, Settings });
 
     const all = WeatherKit2.decode(new ByteBuffer(new Uint8Array(res.body)), "all");
-    assert.equal(all.forecastNextHour.metadata.providerName, "APPLE_PROVIDER");
-    assert.ok(Math.abs(all.forecastNextHour.minutes[0].precipitationIntensity - 0.4) < 1e-6);
+    assert.equal(all.forecastNextHour, undefined);
 });
 
 test("Response removes forecastNextHour when prefetch has only trace / possible precipitation (blank chart)", async () => {
@@ -232,8 +231,8 @@ function createOriginalRainNextHour() {
     const root = WeatherKit2.encode(builder, "all", {
         forecastNextHour: {
             ...makeVisibleNextHour("APPLE_PROVIDER"),
-            condition: [],
-            summary: [],
+            condition: [{ forecastToken: "CONSTANT", parameters: [], startTime: 0, endTime: 0, beginCondition: "DRIZZLE", endCondition: "DRIZZLE" }],
+            summary: [{ condition: "RAIN", startTime: 0, endTime: 0, precipitationChance: 80, precipitationIntensity: 0.4 }],
             minutes: [{ startTime: 0, precipitationChance: 80, precipitationIntensity: 0.4, perceivedPrecipitationIntensity: 0.2 }],
         },
     });

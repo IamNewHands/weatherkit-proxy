@@ -451,18 +451,8 @@ async function InjectForecastNextHour(forecastNextHour, Settings, enviroments, p
         const hasVisiblePrecipitation = (newForecastNextHour?.minutes ?? []).some(minute => minute?.perceivedPrecipitationIntensity > 0.1);
         const isClear = !hasVisiblePrecipitation || newForecastNextHour?.condition?.[0]?.forecastToken === "CLEAR";
         if (isClear) {
-            // 调整晴天覆盖策略：如果彩云判断是晴天，但 Apple 原始数据存在有效降水，则保留 Apple 原数据
-            const isPrecipitationCondition = condition => condition !== undefined && condition !== null && condition !== "" && condition !== "CLEAR" && condition !== 0;
-            const originalHasPrecipitation =
-                forecastNextHour?.summary?.some(summary => isPrecipitationCondition(summary?.condition)) ||
-                forecastNextHour?.minutes?.some(minute => Number(minute?.precipitationIntensity) > 0 || Number(minute?.perceivedPrecipitationIntensity) > 0) ||
-                forecastNextHour?.condition?.some(condition => isPrecipitationCondition(condition?.beginCondition) || isPrecipitationCondition(condition?.endCondition));
-            if (originalHasPrecipitation) {
-                Console.info("InjectForecastNextHour", "彩云判断为晴天，但 Apple 原始数据存在有效降水，保留 Apple 原数据");
-            } else {
-                Console.info("InjectForecastNextHour", "未来一小时无明显降水，跳过注入并清除该模块（隐藏空白卡片）");
-                forecastNextHour = undefined;
-            }
+            Console.info("InjectForecastNextHour", "未来一小时无明显降水，跳过注入并清除该模块（隐藏空白卡片）");
+            forecastNextHour = undefined;
         } else {
             newForecastNextHour.metadata = { ...forecastNextHour?.metadata, ...newForecastNextHour.metadata };
             forecastNextHour = { ...forecastNextHour, ...newForecastNextHour };
